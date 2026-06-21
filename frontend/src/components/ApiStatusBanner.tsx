@@ -10,6 +10,7 @@ export default function ApiStatusBanner() {
   if (status === "online" || dismissed) return null;
 
   const isMisconfigured = status === "misconfigured";
+  const isDegraded = status === "degraded";
 
   return (
     <div className={`api-banner api-banner--${status}`}>
@@ -27,6 +28,7 @@ export default function ApiStatusBanner() {
           <strong>
             {status === "checking" && "Connecting to backend..."}
             {isMisconfigured && "Frontend configuration required"}
+            {isDegraded && "Backend API keys missing on Render"}
             {status === "offline" && "Backend API is not reachable"}
           </strong>
           <p>
@@ -35,6 +37,11 @@ export default function ApiStatusBanner() {
                 Set <code>VITE_API_URL</code> in Vercel → Settings → Environment Variables
                 to your Render backend URL (e.g. <code>https://finsight-ai.onrender.com</code>),
                 then <strong>Redeploy</strong>.
+              </>
+            ) : isDegraded ? (
+              <>
+                {errorMessage}. On Render → your service → <strong>Environment</strong>,
+                add the missing variables and click <strong>Save &amp; Deploy</strong>.
               </>
             ) : status === "offline" ? (
               <>

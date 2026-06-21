@@ -19,9 +19,9 @@ def get_pdf_service() -> PDFService:
 
 
 def get_pinecone_service() -> PineconeService:
-    from app.main import pinecone_service
+    from app.services.container import services
 
-    return pinecone_service
+    return services.get_pinecone_service()
 
 
 @router.post("/upload", response_model=UploadResponse)

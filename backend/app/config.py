@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
 
     # OpenAI
-    openai_api_key: str = Field(..., description="OpenAI API key")
+    openai_api_key: str = Field(default="", description="OpenAI API key")
     embedding_model: str = Field(
         default="text-embedding-3-small",
         description="OpenAI embedding model",
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     chat_model: str = Field(default="gpt-4o-mini", description="OpenAI chat model")
 
     # Pinecone
-    pinecone_api_key: str = Field(..., description="Pinecone API key")
+    pinecone_api_key: str = Field(default="", description="Pinecone API key")
     pinecone_index_name: str = Field(
         default="finsight-reports",
         description="Pinecone index name",
@@ -55,6 +55,25 @@ class Settings(BaseSettings):
     def cors_origin_list(self) -> List[str]:
         """Parse comma-separated CORS origins into a list."""
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    def missing_secrets(self) -> List[str]:
+        """Return names of required environment variables that are missing or placeholders."""
+        missing: List[str] = []
+
+        openai = self.openai_api_key.strip()
+        if not openai or openai in {"sk-your-openai-api-key", "your-openai-api-key"}:
+            missing.append("OPENAI_API_KEY")
+
+        pinecone = self.pinecone_api_key.strip()
+        if not pinecone or pinecone in {"your-pinecone-api-key", "pc-your-pinecone-api-key"}:
+            missing.append("PINECONE_API_KEY")
+
+        return missing
+
+    @property
+    def is_fully_configured(self) -> bool:
+        """True when all secrets required for RAG are present."""
+        return len(self.missing_secrets()) == 0
 
 
 @lru_cache

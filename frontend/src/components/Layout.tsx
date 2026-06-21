@@ -49,7 +49,13 @@ export default function Layout({ children }: LayoutProps) {
             ))}
           </nav>
           <span className={`api-pill api-pill--${status}`}>
-            {status === "online" ? "API Online" : status === "checking" ? "Checking..." : "API Offline"}
+            {status === "online"
+              ? "API Online"
+              : status === "degraded"
+                ? "Keys Missing"
+                : status === "checking"
+                  ? "Checking..."
+                  : "API Offline"}
           </span>
         </div>
       </header>

@@ -1146,6 +1146,15 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   background: var(--success-muted);
 }
 
+.api-banner--degraded { background: rgba(251, 191, 36, 0.1); }
+.api-banner--degraded .api-banner-icon { color: var(--warning); }
+
+.api-pill--degraded {
+  color: var(--warning);
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.12);
+}
+
 .api-pill--offline,
 .api-pill--misconfigured {
   color: var(--error);

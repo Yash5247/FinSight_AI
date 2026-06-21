@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app import __version__
 from app.config import get_settings
+from app.core.configuration import ConfigurationError
 from app.core.exceptions import (
     DocumentNotFoundError,
     FinSightError,
@@ -18,32 +19,27 @@ from app.core.exceptions import (
 )
 from app.logging_config import get_logger, setup_logging
 from app.routes import chat, health, upload
-from app.services.embedding_service import EmbeddingService
-from app.services.pinecone_service import PineconeService
-from app.services.rag_service import RAGService
 
 logger = get_logger(__name__)
-
-# Module-level service instances (initialized at startup)
-embedding_service: EmbeddingService
-pinecone_service: PineconeService
-rag_service: RAGService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Initialize services on startup and clean up on shutdown."""
-    global embedding_service, pinecone_service, rag_service
-
+    """Startup/shutdown — server binds to PORT even if API keys are not yet configured."""
     settings = get_settings()
     setup_logging(settings.log_level)
     logger.info("Starting FinSight AI v%s [%s]", __version__, settings.environment)
 
-    embedding_service = EmbeddingService(settings)
-    pinecone_service = PineconeService(settings, embedding_service)
-    rag_service = RAGService(settings, pinecone_service)
+    missing = settings.missing_secrets()
+    if missing:
+        logger.warning(
+            "Running in degraded mode — missing env vars: %s. "
+            "Add them on Render and redeploy to enable upload/chat.",
+            ", ".join(missing),
+        )
+    else:
+        logger.info("All required environment variables are configured")
 
-    logger.info("All services initialized successfully")
     yield
     logger.info("Shutting down FinSight AI")
 
@@ -78,9 +74,16 @@ def create_app() -> FastAPI:
             "version": __version__,
             "docs": "/docs",
             "health": "/health",
+            "configured": settings.is_fully_configured,
         }
 
-    # Exception handlers
+    @app.exception_handler(ConfigurationError)
+    async def config_error_handler(request: Request, exc: ConfigurationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=503,
+            content={"detail": exc.message, "error_type": "ConfigurationError"},
+        )
+
     @app.exception_handler(PDFProcessingError)
     async def pdf_error_handler(request: Request, exc: PDFProcessingError) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": exc.message, "error_type": "PDFProcessingError"})
@@ -101,7 +104,6 @@ def create_app() -> FastAPI:
     async def finsight_error_handler(request: Request, exc: FinSightError) -> JSONResponse:
         return JSONResponse(status_code=500, content={"detail": exc.message, "error_type": "FinSightError"})
 
-    # Routes
     app.include_router(health.router)
     app.include_router(upload.router)
     app.include_router(chat.router)

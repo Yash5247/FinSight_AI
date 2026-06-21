@@ -12,9 +12,9 @@ router = APIRouter(tags=["Chat"])
 
 
 def get_rag_service() -> RAGService:
-    from app.main import rag_service
+    from app.services.container import services
 
-    return rag_service
+    return services.get_rag_service()
 
 
 @router.post("/chat", response_model=ChatResponse)

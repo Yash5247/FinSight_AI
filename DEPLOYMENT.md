@@ -123,6 +123,17 @@ The **frontend on Vercel is only the UI**. Upload and Chat require the **FastAPI
 - Ensure OpenAI account has billing/credits
 - Pinecone index is created automatically on first upload
 
+### Render crash: `You haven't specified an Api-Key`
+- **Cause:** `PINECONE_API_KEY` is not set on Render
+- **Fix:** Render → your service → **Environment** → add:
+  - `PINECONE_API_KEY` = your key from [app.pinecone.io](https://app.pinecone.io)
+  - `OPENAI_API_KEY` = your key from [platform.openai.com](https://platform.openai.com)
+- Click **Save Changes** then **Manual Deploy**
+
+### Render: `No open ports detected`
+- Usually means the app **crashed on startup** (often missing API keys above)
+- After adding keys, redeploy — the server must stay running to bind to PORT
+
 ### Render build fails
 - Confirm Root Directory is `backend`
 - Python version: 3.11

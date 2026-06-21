@@ -8,10 +8,12 @@ from pydantic import BaseModel, Field
 class HealthResponse(BaseModel):
     """Health check response."""
 
-    status: str = Field(..., examples=["ok"])
+    status: str = Field(..., examples=["ok", "degraded"])
     version: str
     environment: str
     pinecone_index: str
+    configured: bool = True
+    missing_env: List[str] = Field(default_factory=list)
 
 
 class UploadResponse(BaseModel):

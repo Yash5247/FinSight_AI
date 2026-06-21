@@ -46,4 +46,6 @@ export interface HealthResponse {
   version: string;
   environment: string;
   pinecone_index: string;
+  configured: boolean;
+  missing_env: string[];
 }
