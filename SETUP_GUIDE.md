@@ -88,32 +88,37 @@ If you see this — **Render is done. Backend is working.**
 
 ---
 
-## STEP 4 — Vercel frontend (THIS is what most people miss)
+## STEP 4 — Redeploy Vercel (automatic fix for connection errors)
 
-Your Vercel site is only HTML/JS. It must know your Render backend URL.
+The repo now includes a **Vercel proxy** in `frontend/vercel.json` that routes `/api/*` to your Render backend. This fixes CORS / "Backend not reachable" errors.
 
-1. Open [vercel.com/dashboard](https://vercel.com/dashboard)
-2. Click your **FinSight** project
-3. **Settings** → **Environment Variables**
-4. Click **Add New**
+**You do NOT need `VITE_API_URL` anymore** (optional only).
 
-| Key | Value |
-|-----|-------|
-| `VITE_API_URL` | `https://YOUR-BACKEND-NAME.onrender.com` |
-
-Example: if Render URL is `https://finsight-ai-backend.onrender.com`, use exactly that.
-
-5. Enable for: **Production**, **Preview**, **Development** (all three)
-6. Click **Save**
-7. Go to **Deployments** tab
-8. Click **⋯** on the latest deployment → **Redeploy**
-9. Wait for build to finish (~1–2 min)
+1. Push latest code from GitHub (already done if you pulled latest)
+2. Go to [vercel.com/dashboard](https://vercel.com/dashboard) → your FinSight project
+3. **Deployments** → click **⋯** on latest → **Redeploy**
+4. Wait for build to finish (~1–2 min)
 
 ### Test Vercel:
 
 1. Open your Vercel website
-2. Top right should say **API Online** (green)
-3. If it says **API Offline** or **Keys Missing** → `VITE_API_URL` is wrong or you forgot to redeploy
+2. Wait up to **60 seconds** on first load (Render free tier wakes up)
+3. Top right should say **API Online** (green)
+4. If it says "Waking up..." — click **Retry** or open this in a new tab first:
+   ```
+   https://finsight-ai-iw2a.onrender.com/health
+   ```
+   Then refresh your Vercel site.
+
+### Optional: `VITE_API_URL` (only if proxy doesn't work)
+
+Only set this if you prefer direct API calls instead of the proxy:
+
+| Key | Value |
+|-----|-------|
+| `VITE_API_URL` | `https://finsight-ai-iw2a.onrender.com` |
+
+No `/health` at the end. Then redeploy Vercel.
 
 ---
 

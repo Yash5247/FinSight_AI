@@ -6,9 +6,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { checkHealth, getApiBaseUrl } from "../api/client";
+import { checkHealth, getApiDisplayUrl } from "../api/client";
 
-export type ApiStatus = "checking" | "online" | "degraded" | "offline" | "misconfigured";
+export type ApiStatus = "checking" | "online" | "degraded" | "offline" | "waking";
 
 interface ApiStatusContextValue {
   status: ApiStatus;
@@ -24,20 +24,12 @@ export function ApiStatusProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<ApiStatus>("checking");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [missingEnv, setMissingEnv] = useState<string[]>([]);
-  const apiUrl = getApiBaseUrl();
+  const apiUrl = getApiDisplayUrl();
 
   const recheck = useCallback(async () => {
     setStatus("checking");
     setErrorMessage(null);
     setMissingEnv([]);
-
-    if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) {
-      setStatus("misconfigured");
-      setErrorMessage(
-        "VITE_API_URL is not set on Vercel. Add your Render backend URL and redeploy."
-      );
-      return;
-    }
 
     try {
       const health = await checkHealth();
@@ -51,10 +43,13 @@ export function ApiStatusProvider({ children }: { children: ReactNode }) {
       }
       setStatus("online");
     } catch (err) {
-      setStatus("offline");
-      setErrorMessage(
-        err instanceof Error ? err.message : "Cannot reach the backend API."
-      );
+      const message = err instanceof Error ? err.message : "Cannot reach the backend API.";
+      if (message.includes("timed out") || message.includes("waking up")) {
+        setStatus("waking");
+      } else {
+        setStatus("offline");
+      }
+      setErrorMessage(message);
     }
   }, []);
 

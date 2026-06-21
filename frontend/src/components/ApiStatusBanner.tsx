@@ -1,5 +1,6 @@
 import { AlertCircle, RefreshCw, Server, X } from "lucide-react";
 import { useState } from "react";
+import { RENDER_BACKEND_URL } from "../api/client";
 import { useApiStatus } from "../context/ApiStatusContext";
 import Button from "./ui/Button";
 
@@ -9,16 +10,16 @@ export default function ApiStatusBanner() {
 
   if (status === "online" || dismissed) return null;
 
-  const isMisconfigured = status === "misconfigured";
   const isDegraded = status === "degraded";
+  const isWaking = status === "waking" || status === "checking";
 
   return (
     <div className={`api-banner api-banner--${status}`}>
       <div className="api-banner-inner">
         <div className="api-banner-icon">
-          {status === "checking" ? (
+          {isWaking ? (
             <RefreshCw size={20} className="spin" />
-          ) : isMisconfigured ? (
+          ) : isDegraded ? (
             <AlertCircle size={20} />
           ) : (
             <Server size={20} />
@@ -26,46 +27,37 @@ export default function ApiStatusBanner() {
         </div>
         <div className="api-banner-content">
           <strong>
-            {status === "checking" && "Connecting to backend..."}
-            {isMisconfigured && "Frontend configuration required"}
+            {status === "checking" && "Connecting to backend (may take up to 60s on free Render)..."}
+            {isWaking && "Render backend is waking up — please wait"}
             {isDegraded && "Backend API keys missing on Render"}
             {status === "offline" && "Backend API is not reachable"}
           </strong>
           <p>
-            {isMisconfigured ? (
+            {isDegraded ? (
               <>
-                Set <code>VITE_API_URL</code> in Vercel → Settings → Environment Variables
-                to your Render backend URL (e.g. <code>https://finsight-ai.onrender.com</code>),
-                then <strong>Redeploy</strong>.
+                {errorMessage}. On Render → Environment, add missing keys and redeploy.
               </>
-            ) : isDegraded ? (
+            ) : isWaking ? (
               <>
-                {errorMessage}. On Render → your service → <strong>Environment</strong>,
-                add the missing variables and click <strong>Save &amp; Deploy</strong>.
+                Render free tier sleeps after inactivity. Retries automatically — or open{" "}
+                <a href={`${RENDER_BACKEND_URL}/health`} target="_blank" rel="noopener noreferrer">
+                  {RENDER_BACKEND_URL}/health
+                </a>{" "}
+                in a new tab to wake it, then click Retry.
               </>
             ) : status === "offline" ? (
               <>
-                {errorMessage}. Deploy the backend on Render and ensure API keys are set.
-                Current API URL: <code>{apiUrl}</code>
+                {errorMessage}
+                <br />
+                Backend target: <code>{apiUrl}</code>
               </>
             ) : (
-              "Checking API connection..."
+              "Checking API via Vercel proxy..."
             )}
           </p>
-          {!isMisconfigured && status === "offline" && (
-            <details className="api-banner-steps">
-              <summary>Setup checklist</summary>
-              <ol>
-                <li>Deploy backend folder on Render with OpenAI + Pinecone keys</li>
-                <li>Set <code>CORS_ORIGINS</code> to your Vercel URL on Render</li>
-                <li>Set <code>VITE_API_URL</code> on Vercel to your Render URL</li>
-                <li>Redeploy both services</li>
-              </ol>
-            </details>
-          )}
         </div>
         <div className="api-banner-actions">
-          {status !== "checking" && (
+          {!isWaking && (
             <Button variant="secondary" size="sm" onClick={() => recheck()}>
               <RefreshCw size={14} />
               Retry

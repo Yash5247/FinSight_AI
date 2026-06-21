@@ -48,13 +48,13 @@ export default function Layout({ children }: LayoutProps) {
               </NavLink>
             ))}
           </nav>
-          <span className={`api-pill api-pill--${status}`}>
+          <span className={`api-pill api-pill--${status === "waking" ? "checking" : status}`}>
             {status === "online"
               ? "API Online"
               : status === "degraded"
                 ? "Keys Missing"
-                : status === "checking"
-                  ? "Checking..."
+                : status === "checking" || status === "waking"
+                  ? "Waking up..."
                   : "API Offline"}
           </span>
         </div>
