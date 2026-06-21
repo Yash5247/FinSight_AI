@@ -37,19 +37,37 @@ class PineconeService:
     def _ensure_index(self) -> None:
         """Create Pinecone index if it does not exist."""
         index_name = self._settings.pinecone_index_name
-        existing = {idx.name for idx in self._pc.list_indexes()}
+        try:
+            existing = {idx.name for idx in self._pc.list_indexes()}
+        except Exception as exc:
+            raise VectorStoreError(
+                f"Invalid PINECONE_API_KEY or Pinecone account issue: {exc}"
+            ) from exc
 
         if index_name not in existing:
-            logger.info("Creating Pinecone index: %s", index_name)
-            self._pc.create_index(
-                name=index_name,
-                dimension=EMBEDDING_DIMENSION,
-                metric="cosine",
-                spec=ServerlessSpec(
-                    cloud=self._settings.pinecone_cloud,
-                    region=self._settings.pinecone_region,
-                ),
+            logger.info(
+                "Creating Pinecone index '%s' (cloud=%s, region=%s)",
+                index_name,
+                self._settings.pinecone_cloud,
+                self._settings.pinecone_region,
             )
+            try:
+                self._pc.create_index(
+                    name=index_name,
+                    dimension=EMBEDDING_DIMENSION,
+                    metric="cosine",
+                    spec=ServerlessSpec(
+                        cloud=self._settings.pinecone_cloud,
+                        region=self._settings.pinecone_region,
+                    ),
+                )
+            except Exception as exc:
+                raise VectorStoreError(
+                    "Failed to create Pinecone index. On Render, set "
+                    "PINECONE_CLOUD=aws and PINECONE_REGION=us-east-1 (defaults). "
+                    "Or create index 'finsight-reports' manually in Pinecone console. "
+                    f"Details: {exc}"
+                ) from exc
         else:
             logger.info("Using existing Pinecone index: %s", index_name)
 

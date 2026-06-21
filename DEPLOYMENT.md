@@ -52,10 +52,10 @@ The **frontend on Vercel is only the UI**. Upload and Chat require the **FastAPI
    | Key | Value |
    |-----|-------|
    | `OPENAI_API_KEY` | your OpenAI key |
-   | `PINECONE_API_KEY` | your Pinecone key |
+   | `PINECONE_API_KEY` | your Pinecone key (from pinecone.io → API Keys only) |
    | `PINECONE_INDEX_NAME` | `finsight-reports` |
-   | `PINECONE_CLOUD` | `aws` |
-   | `PINECONE_REGION` | `us-east-1` |
+   | `PINECONE_CLOUD` | type `aws` (not from Pinecone website) |
+   | `PINECONE_REGION` | type `us-east-1` (not from Pinecone website) |
    | `ENVIRONMENT` | `production` |
    | `CORS_ORIGINS` | your Vercel URL (see below) |
    | `LOG_LEVEL` | `INFO` |
