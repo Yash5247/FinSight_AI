@@ -10,6 +10,8 @@
 
 **Live Demo:** Deploy frontend on [Vercel](https://vercel.com) · Backend on [Render](https://render.com)
 
+> **Upload/Chat not working?** See **[DEPLOYMENT.md](./DEPLOYMENT.md)** — step-by-step setup for API keys, Render backend, and Vercel env vars.
+
 **Repository:** [github.com/Yash5247/FinSight_AI](https://github.com/Yash5247/FinSight_AI)
 
 ---

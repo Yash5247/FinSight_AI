@@ -2,6 +2,8 @@ import { NavLink, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { BarChart3, Home, MessageSquare, Upload } from "lucide-react";
 import AnimatedBackground from "./ui/AnimatedBackground";
+import ApiStatusBanner from "./ApiStatusBanner";
+import { useApiStatus } from "../context/ApiStatusContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,10 +18,12 @@ const NAV = [
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const { status } = useApiStatus();
 
   return (
     <div className="layout">
       {isHome && <AnimatedBackground />}
+      <ApiStatusBanner />
       <header className="layout-header">
         <div className="layout-header-inner">
           <NavLink to="/" className="logo">
@@ -44,6 +48,9 @@ export default function Layout({ children }: LayoutProps) {
               </NavLink>
             ))}
           </nav>
+          <span className={`api-pill api-pill--${status}`}>
+            {status === "online" ? "API Online" : status === "checking" ? "Checking..." : "API Offline"}
+          </span>
         </div>
       </header>
       <main className={`layout-main${isHome ? " layout-main--home" : ""}`}>{children}</main>

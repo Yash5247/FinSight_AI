@@ -64,10 +64,21 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
+        allow_origin_regex=r"https://.*\.vercel\.app",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.get("/", tags=["Root"])
+    async def root() -> dict:
+        """Root endpoint for platform health probes."""
+        return {
+            "service": "FinSight AI API",
+            "version": __version__,
+            "docs": "/docs",
+            "health": "/health",
+        }
 
     # Exception handlers
     @app.exception_handler(PDFProcessingError)

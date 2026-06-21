@@ -3,8 +3,10 @@ services:
     name: finsight-ai-backend
     runtime: python
     plan: free
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: python run.py
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9

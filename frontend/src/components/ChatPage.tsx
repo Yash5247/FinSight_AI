@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { sendChatMessage } from "../api/client";
 import { useDocuments } from "../context/DocumentContext";
+import { useApiStatus } from "../context/ApiStatusContext";
 import ChatMessage from "./ChatMessage";
 import type { ChatMessage as ChatMessageType } from "../types";
 import FadeIn from "./ui/FadeIn";
@@ -31,6 +32,8 @@ function generateId(): string {
 
 export default function ChatPage() {
   const { documents, activeDocumentId, setActiveDocumentId } = useDocuments();
+  const { status: apiStatus } = useApiStatus();
+  const backendReady = apiStatus === "online";
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -186,7 +189,7 @@ export default function ChatPage() {
                       key={q}
                       className="suggestion-chip"
                       onClick={() => sendMessage(q)}
-                      disabled={documents.length === 0}
+                      disabled={documents.length === 0 || !backendReady}
                     >
                       {q}
                     </button>
@@ -229,13 +232,13 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={isLoading || documents.length === 0}
+              disabled={isLoading || documents.length === 0 || !backendReady}
               rows={1}
             />
             <button
               className="btn btn--primary btn--md chat-send"
               onClick={() => sendMessage(input)}
-              disabled={isLoading || !input.trim() || documents.length === 0}
+              disabled={isLoading || !input.trim() || documents.length === 0 || !backendReady}
               aria-label="Send message"
             >
               {isLoading ? <Loader2 size={18} className="spin" /> : <Send size={18} />}

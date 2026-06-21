@@ -1,6 +1,21 @@
-import type { ChatResponse, UploadResponse, ApiError } from "../types";
+import type { ChatResponse, UploadResponse, ApiError, HealthResponse } from "../types";
 
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+/** Resolve API base URL — VITE_API_URL is required in production (Vercel). */
+export function getApiBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_API_URL?.trim();
+  if (envUrl) return envUrl.replace(/\/$/, "");
+  // Local dev fallback via Vite proxy
+  return "/api";
+}
+
+const API_BASE = getApiBaseUrl();
+
+class ApiConnectionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ApiConnectionError";
+  }
+}
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -16,6 +31,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const url = `${API_BASE}${path}`;
+  try {
+    return await fetch(url, init);
+  } catch {
+    throw new ApiConnectionError(
+      import.meta.env.PROD && !import.meta.env.VITE_API_URL
+        ? "Backend URL not configured. Set VITE_API_URL on Vercel and redeploy."
+        : `Cannot connect to API at ${url}. Is the backend running on Render?`
+    );
+  }
+}
+
 export async function uploadPdf(
   file: File,
   companyName?: string
@@ -26,7 +54,7 @@ export async function uploadPdf(
     formData.append("company_name", companyName.trim());
   }
 
-  const response = await fetch(`${API_BASE}/upload`, {
+  const response = await apiFetch("/upload", {
     method: "POST",
     body: formData,
   });
@@ -38,7 +66,7 @@ export async function sendChatMessage(
   question: string,
   documentId?: string
 ): Promise<ChatResponse> {
-  const response = await fetch(`${API_BASE}/chat`, {
+  const response = await apiFetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -50,7 +78,7 @@ export async function sendChatMessage(
   return handleResponse<ChatResponse>(response);
 }
 
-export async function checkHealth(): Promise<{ status: string }> {
-  const response = await fetch(`${API_BASE}/health`);
-  return handleResponse<{ status: string }>(response);
+export async function checkHealth(): Promise<HealthResponse> {
+  const response = await apiFetch("/health");
+  return handleResponse<HealthResponse>(response);
 }

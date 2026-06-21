@@ -40,3 +40,10 @@ export interface ApiError {
   detail: string;
   error_type?: string;
 }
+
+export interface HealthResponse {
+  status: string;
+  version: string;
+  environment: string;
+  pinecone_index: string;
+}

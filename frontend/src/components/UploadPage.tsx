@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, type DragEvent, type ChangeEvent } from 
 import { Building2, CheckCircle2, FileUp, Loader2, Upload } from "lucide-react";
 import { uploadPdf } from "../api/client";
 import { useDocuments } from "../context/DocumentContext";
+import { useApiStatus } from "../context/ApiStatusContext";
 import FadeIn from "./ui/FadeIn";
 import Badge from "./ui/Badge";
 import Button from "./ui/Button";
@@ -24,6 +25,8 @@ export default function UploadPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addDocument } = useDocuments();
+  const { status: apiStatus } = useApiStatus();
+  const backendReady = apiStatus === "online";
 
   const handleFile = useCallback((selected: File | null) => {
     setError(null);
@@ -151,8 +154,8 @@ export default function UploadPage() {
         </div>
 
         <div className="upload-actions">
-          <Button onClick={handleUpload} disabled={!file || isUploading} icon={isUploading ? <Loader2 size={18} className="spin" /> : <Upload size={18} />}>
-            {isUploading ? "Processing..." : "Upload & Index"}
+          <Button onClick={handleUpload} disabled={!file || isUploading || !backendReady} icon={isUploading ? <Loader2 size={18} className="spin" /> : <Upload size={18} />}>
+            {isUploading ? "Processing..." : backendReady ? "Upload & Index" : "Backend Offline"}
           </Button>
           {file && (
             <Button
